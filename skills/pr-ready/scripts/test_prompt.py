@@ -1412,6 +1412,89 @@ class InvariantsOnlyTest(unittest.TestCase):
                     self.assertIn(instruction, text)
 
 
+class ChangeReviewEntryTest(unittest.TestCase):
+    def skill(self):
+        path = ROOT / "skills/change-review/SKILL.md"
+        self.assertTrue(path.is_file(), "the change-review entry skill is missing")
+        return path.read_text()
+
+    def test_review_entry_compiles_the_reviewer_pack(self):
+        skill = self.skill()
+        text = " ".join(skill.split())
+        for instruction in (
+            "<HOUSE_RULES_ROOT>/INDEX.md",
+            "Use the dispatcher's commit when the dispatcher supplies one.",
+            "git -C \"<HOUSE_RULES_ROOT>\" rev-parse HEAD",
+            "<HOUSE_RULES_ROOT>/skills/pr-ready/scripts/prompt.py",
+            '--rev "<HOUSE_RULES_COMMIT>" --role reviewer --no-target --session',
+            "Read the whole compiler output before reviewing.",
+            "Compile the reviewer role and the selected `prompts/lenses/<lens>.md` together",
+            'Add `--lens "<lens>"` to the pack command',
+            "If compilation fails, report the error and stop the review.",
+            "Do not substitute live checkout files or an incomplete pack.",
+            "After compaction, compile the pack again from the same named commit.",
+        ):
+            with self.subTest(instruction=instruction):
+                self.assertIn(instruction, text)
+        # The role owns its recursive includes, criteria and report template.
+        self.assertNotIn("--session prompts/roles/reviewer.md", skill)
+        self.assertNotRegex(skill, r"(?m)^@rule ")
+        report = (ROOT / "prompts/util/review-report.md").read_text()
+        template = report.split("```text\n", 1)[1].split("```", 1)[0]
+        self.assertNotIn(template.strip(), skill)
+        for path in ("prompts/util/review-bar.md", "prompts/skills/code-canon.md"):
+            criteria = (ROOT / path).read_text()
+            for line in criteria.splitlines():
+                if line.startswith("- ") and len(line.split()) >= 8:
+                    with self.subTest(path=path, line=line):
+                        self.assertNotIn(line, skill)
+
+    def test_review_and_writing_triggers_are_aligned(self):
+        index = (ROOT / "INDEX.md").read_text()
+        trigger = (
+            "- Reviewing code, a commit, a diff, a branch, or a pull request: load "
+            "[change-review](skills/change-review/SKILL.md)."
+        )
+        self.assertIn(trigger, index)
+        self.assertLess(index.index("[bench-discipline]"), index.index(trigger))
+        self.assertLess(index.index(trigger), index.index("[ci-build-optimization]"))
+        description = self.skill().split("description: ", 1)[1].split("\n", 1)[0]
+        for wording in ("Review code, a commit, a diff, a branch or a pull request",
+                        "review, check or look over a change", "pr-ready"):
+            with self.subTest(wording=wording):
+                self.assertIn(wording, description)
+        # The operator withdrew load optimizations; existing triggers remain broad.
+        self.assertIn(
+            "- Any operator-facing text: load [operator-writing](skills/operator-writing/SKILL.md).",
+            index,
+        )
+        self.assertIn(
+            "- Push preparation, review rounds, review fixes, or PR merges: load "
+            "[pr-ready](skills/pr-ready/SKILL.md).", index,
+        )
+        writing = (ROOT / "skills/operator-writing/SKILL.md").read_text()
+        self.assertIn("Use for all operator communication", writing)
+        ready = (ROOT / "skills/pr-ready/SKILL.md").read_text()
+        ready_description = ready.split("description: ", 1)[1].split("\n", 1)[0]
+        self.assertIn("when writing or running a review round (human or agent reviewer)", ready_description)
+
+    def test_plain_review_uses_one_reviewer_and_fixed_format(self):
+        text = " ".join(self.skill().split())
+        for instruction in (
+            "The session's already-loaded rules stay in force.",
+            "Perform a read-only review and run at most one targeted test to resolve a specific suspected finding.",
+            "Use the fixed report format unless the operator asks for something shorter.",
+            "../../rules/session-writing.md#questions-to-the-operator",
+            "Questions to the operator use",
+            "A plain review request gets one reviewer.",
+            "Start a panel only when the operator asks for a panel, through pr-ready.",
+            "A review request alone does not authorize a GitHub post.",
+            "Fixing findings, pushing, further dispatched review rounds and merging continue in skill pr-ready.",
+        ):
+            with self.subTest(instruction=instruction):
+                self.assertIn(instruction, text)
+
+
 class RuleIndexTest(unittest.TestCase):
     def test_index_contains_only_purpose_precedence_and_load_lines(self):
         purpose = {

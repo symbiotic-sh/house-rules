@@ -26,6 +26,7 @@ At session start and after every reset or compaction, read these files in full:
 - Parallel agents, lanes, workflows, or background jobs: load [agent-lanes](skills/agent-lanes/SKILL.md).
 - Evidence-based audit or due-diligence reports: load [audit-report-authoring](skills/audit-report-authoring/SKILL.md).
 - Comparative benchmarks, evaluations, A/B tests, or tuning sweeps: load [bench-discipline](skills/bench-discipline/SKILL.md).
+- Reviewing code, a commit, a diff, a branch, or a pull request: load [change-review](skills/change-review/SKILL.md).
 - CI build time, cost, caching, or scheduling work: load [ci-build-optimization](skills/ci-build-optimization/SKILL.md).
 - Choices needing operator input, decisions, or explanations: load [decision-brief](skills/decision-brief/SKILL.md).
 - Design decisions, components, refactors, specs, or architecture reviews: load [design-canon](skills/design-canon/SKILL.md).

@@ -294,6 +294,8 @@ The pack-assembly and worker-pack designs own tests for Git-object reads and sha
 
 ## Rejected alternatives
 
+- §4 (operator-writing narrowing) withdrawn by the operator on 2026-10-07; retain today's loading and skill text.
+- §5 (general communication-rule moves) withdrawn by the operator on 2026-10-07; retain today's rule owners and loading.
 - Widen the pr-ready trigger to plain reviews: rejected because a plain review does not need delivery orchestration.
 - Copy review criteria or a compiled reviewer pack into the skill: rejected because shared criteria need one owner.
 - List reviewer include files in the skill: rejected because a list duplicates the role's `@rule` declarations.
@@ -406,6 +408,15 @@ Dependency implementation must preserve the review-entry acceptance criteria bef
 8. **2026-10-07 — Index name.** The operator chose `<HOUSE_RULES_ROOT>/INDEX.md` as the House Rules index.
    The foundation design owns the rename and pointer-only loaders
    ([foundation design (#73)](https://github.com/symbiotic-sh/house-rules/pull/79)).
+9. **2026-10-07 — Drop load optimizations.** The operator said "I agree to drop it" for the load optimizations.
+   Implement only §1's change-review skill, §2's added change-review index line, and §3's pr-ready
+   description cross-reference if needed for discovery. Every existing rule and skill keeps loading
+   as today. Sections §4 and §5 are withdrawn; related load-reduction changes in §6 and their
+   tests and canary load exclusions are outside this implementation. Review reports retain the fixed
+   format (shorter only when asked); review questions use
+   [rules/session-writing.md §Questions to the operator](../../rules/session-writing.md#questions-to-the-operator).
+   A plain request gets one reviewer; a panel starts only when asked. The name remains `change-review`.
+   No size targets apply.
 
 ## Open points
 
