@@ -67,12 +67,17 @@
 - Assign one lead to decide for each work item.
 - Verify lane diffs stay within ownership.
 - Keep shared spine files append-only.
+- Run a rerunnable benchmark in the project's benchmark environment: by default a Linux container from Apple's `container` tool, with a fixed core count, memory size and recorded image.
+- Use a macOS virtual machine with the same fixed setup only for a benchmark that measures macOS-specific behaviour.
+- Run a benchmark's arms interleaved, one run of each arm per round in rotating order, and compare them by round.
+  A valid stored baseline is reused instead of rerun, as `bench-discipline` allows; interleave only the arms that run.
 - Run one benchmark or measured performance run at a time per machine, across all agents, lanes and sessions.
 - Start no build or test suite of your own while your measured run is active.
 - Record the machine load with each run.
 - Mark a run taken under overlap with another benchmark, measured run, build or test suite invalid, and rerun it.
 - The one exception: contention is the declared study and resource policy permits it.
-- Before a benchmark or measured performance run starts, check the machine load.
+- The load gate below, and holding the machine's build queue during a measured run, apply only to a measurement taken on a shared host, outside the benchmark environment.
+- Before a benchmark or measured performance run on a shared host starts, check the machine load.
 - When the one-minute load average is above the online core count, do not start the run.
   Send the operator a message at once that starts with this, in bold: the run you were about to start, the load, the core count and the heaviest processes with their working directories.
   Also send it as a notification when the tool has one.
