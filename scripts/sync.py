@@ -2,7 +2,9 @@
 """Update the checkout and report House Rules installation drift; see INSTALL-AGENTS.md §6.
 
 With --install-hooks it also writes the session-context hook into each Claude Code and Codex
-hook file (INSTALL-AGENTS.md §3 step 10). It writes no other file.
+hook file (INSTALL-AGENTS.md §3 step 10). It writes no other file. With --command PATH the hook runs
+through the House Rules command at PATH (`house-rules exec --hook scripts/session_context.py ...`),
+which resolves each session's repository's House Rules version first.
 """
 
 import argparse
@@ -342,10 +344,12 @@ def check_hook(root, roots, path, product, findings, replaced=frozenset(), gener
         return
     entry, commands = owned[0]
     python = commands[0][0] if commands[0] else ""
-    if len(owned) != 1 or not Path(python).is_absolute() or not is_file(Path(python)) or \
-            entry != (generator or session_context).hooks(product, python, root):
+    through = exec_form(commands[0]) if commands[0] else False
+    expected = (generator or session_context).hooks(product, python, root, *((python,) if through else ()))
+    if len(owned) != 1 or not Path(python).is_absolute() or not is_file(Path(python)) or entry != expected or \
+            (through and not os.access(python, os.X_OK)):  # a command that cannot run delivers no rules
         findings.append(f"stale session context hook: {path}")
-    elif any(len(tokens) > 2 and not is_file(Path(tokens[2])) for tokens in commands):
+    elif not through and any(len(tokens) > 2 and not is_file(Path(tokens[2])) for tokens in commands):
         findings.append(f"session context hook runs a missing script: {path}")
 
 
@@ -368,12 +372,24 @@ def owner(handler, scripts, replaced=frozenset(), python=None):
     except ValueError:
         tokens = []
     # The current form wins over the receipt list, which may name commands the current entry reuses.
-    if len(tokens) in (4, 5) and tokens[1] == "-I" and tokens[2] in scripts and (
-            tokens[3:] in (["codex"], ["approved"], ["approved", "codex"]) or
-            (tokens[3] == "claude" and len(tokens) == 5 and tokens[4].isdigit())) and (
+    if len(tokens) in (4, 5) and tokens[1] == "-I" and tokens[2] in scripts and session_arguments(tokens[3:]) and (
             PYTHON.fullmatch(Path(tokens[0]).name) or same_file(tokens[0], python or sys.executable)):
         return "ours"
+    if exec_form(tokens) and session_arguments(tokens[4:]):
+        return "ours"
     return "replaced" if command in replaced else None
+
+
+def session_arguments(arguments):
+    """The arguments of one Claude Code or Codex session-context handler: claude <n>, codex, approved, approved codex."""
+    return arguments in (["codex"], ["approved"], ["approved", "codex"]) or (
+        len(arguments) == 2 and arguments[0] == "claude" and arguments[1].isdigit())
+
+
+def exec_form(tokens):
+    """<house-rules> exec --hook scripts/session_context.py ...: a handler run through the House Rules command."""
+    return (len(tokens) >= 5 and Path(tokens[0]).name == "house-rules" and Path(tokens[0]).is_absolute()
+            and tokens[1:4] == ["exec", "--hook", "scripts/session_context.py"])
 
 
 def same_file(first, second):
@@ -403,17 +419,19 @@ def check_kimi_hook(root, roots, path, findings, generator=None):
             tokens = shlex.split(command) if isinstance(command, str) else []
         except ValueError:
             tokens = []
-        if len(tokens) >= 3 and tokens[1] == "-I" and tokens[2] in scripts:
+        if (len(tokens) >= 3 and tokens[1] == "-I" and tokens[2] in scripts) or exec_form(tokens):
             ours.append((table, tokens))
     if not ours:
         findings.append(f"missing session context hook: {path}")
         return
     python = ours[0][1][0]
+    through = exec_form(ours[0][1])
     # The same Python-program test the installer's owner() applies: an existing non-Python program
     # (for example /usr/bin/true) would run without delivering the rules.
-    interpreter = PYTHON.fullmatch(Path(python).name) or same_file(python, sys.executable)
+    interpreter = through or PYTHON.fullmatch(Path(python).name) or same_file(python, sys.executable)
+    expected = (generator or session_context).hooks("kimi", python, root, *((python,) if through else ()))["hooks"]
     if not Path(python).is_absolute() or not is_file(Path(python)) or not interpreter or \
-            [table for table, _ in ours] != (generator or session_context).hooks("kimi", python, root)["hooks"]:
+            (through and not os.access(python, os.X_OK)) or [table for table, _ in ours] != expected:
         findings.append(f"stale session context hook: {path}")
 
 
@@ -429,7 +447,7 @@ def handler_commands(entry):
     return result
 
 
-def install_hooks(root, hook_root, home, python, report, generator=None):
+def install_hooks(root, hook_root, home, python, report, generator=None, command=None):
     """Write the current hook entry into each Claude Code and Codex hook file.
 
     report(event, path, backup) runs at once after each backup ("backup") and each replacement
@@ -441,6 +459,9 @@ def install_hooks(root, hook_root, home, python, report, generator=None):
     read again just before replacement, and a change since the first read is an error; a change
     in the instant between that check and the replacement is not detected, so installation runs
     while no agent session changes its settings (INSTALL-AGENTS.md §3 step 10).
+
+    With command, the path of the installed House Rules command, the entry runs through it, so each session
+    gets its repository's resolved House Rules version.
 
     Each home folder is opened once, its open handle is matched to the folder that passes the
     protected-content check, and every read and write happens inside that handle, so renaming or
@@ -472,8 +493,8 @@ def install_hooks(root, hook_root, home, python, report, generator=None):
             check_protected(real, selected)
         for handle, real, name, product in folders:
             with inside(handle):
-                install_one(real, name, generator.hooks(product, python, hook_root), scripts, replaced, python,
-                            report)
+                install_one(real, name, generator.hooks(product, python, hook_root, *((command,) if command else ())),
+                            scripts, replaced, python, report)
     except BaseException as error:
         close_all([handle for handle, *_ in folders], error)
         raise
@@ -612,7 +633,11 @@ def main(argv=None):
     parser.add_argument("--root", type=Path, default=Path(os.path.abspath(__file__)).parents[1])
     parser.add_argument("--install-hooks", action="store_true",
                         help="write the session-context hook into each Claude Code and Codex hook file")
+    parser.add_argument("--command", type=Path,
+                        help="register hooks that run through the House Rules command at this absolute path")
     args = parser.parse_args(argv)
+    if args.command is not None and (not args.command.is_absolute() or args.command.name != "house-rules"):
+        parser.error("--command needs the absolute path of the installed house-rules command")
     root, started = args.root.resolve(), time.monotonic()
     # Hook entries name the root as given, so a stable link to a moving checkout stays valid.
     hook_root = Path(os.path.abspath(args.root))
@@ -635,7 +660,8 @@ def main(argv=None):
             raise ValueError("hook generator was not loaded; no hook file written")
         install_hooks(root, hook_root, Path.home(), sys.executable, lambda event, path, backup: print(
             f"BACKUP: {backup} (copy of {path})" if event == "backup" else
-            f"REGISTERED: session context hook in {path}"), generator[0])
+            f"REGISTERED: session context hook in {path}"), generator[0],
+            str(args.command) if args.command else None)
 
     for name, operation in (
             ("update", lambda: findings.extend(update(root))),

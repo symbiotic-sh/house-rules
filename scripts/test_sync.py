@@ -14,6 +14,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -66,9 +67,11 @@ class SyncFixture:
         shutil.copyfile(REPO / "scripts/session_context.py", self.origin / "scripts/session_context.py")
         self.write(self.origin / "INDEX.md", "# Index\n\n## Always load\n\n" + "".join(
             f"- [{name}](rules/{name}.md)\n" for name in RULES) + "\n## Load when needed\n")
+        self.write(self.origin / "ruleset.json", json.dumps({"version": 1, "context": [
+            *(f"rules/{name}.md" for name in RULES), "skills/operator-writing/SKILL.md"]}))
         for name in RULES:
             self.write(self.origin / f"rules/{name}.md", f"# {name} rules\n")
-        self.commit(self.origin, [".gitignore", "INSTALL-AGENTS.md", "INDEX.md", "skills/sample/SKILL.md",
+        self.commit(self.origin, [".gitignore", "INSTALL-AGENTS.md", "INDEX.md", "ruleset.json", "skills/sample/SKILL.md",
                                   "skills/operator-writing/SKILL.md", "scripts/session_context.py",
                                   *(f"rules/{name}.md" for name in RULES)])
         self.root = self.base / "House Rules checkout"
@@ -804,6 +807,39 @@ class InstallHookTests(SyncFixture, unittest.TestCase):
         self.assertEqual(self.backups(self.codex_hooks), [])
         self.assertFalse((self.kimi / "settings.json").exists() or (self.kimi / "hooks.json").exists())
 
+    def test_hooks_through_the_house_rules_command_replace_the_interpreter_form(self):
+        command = self.base / "bin" / "house-rules"
+        self.write(command, "#!/bin/sh\n")
+        command.chmod(0o755)
+        self.write(self.settings, json.dumps({"hooks": {"SessionStart": [
+            {"hooks": [self.unrelated]}, context.hooks("claude", sys.executable, self.root)]}}))
+        code, out, err = self.invoke("--install-hooks", "--command", str(command))
+        self.assertEqual(code, 0, out + err)
+        for path, product in ((self.settings, "claude"), (self.codex_hooks, "codex")):
+            entry = context.hooks(product, house_rules=str(command))
+            self.assertTrue(all(handler["command"].startswith(f"{command} exec --hook scripts/session_context.py ")
+                                for handler in entry["hooks"]))
+            entries = self.read(path)["hooks"]["SessionStart"]
+            self.assertEqual(entries[-1], entry)
+            self.assertFalse([handler for other in entries[:-1] for handler in other["hooks"]
+                              if "session_context.py" in handler["command"]])
+        self.assertEqual(self.read(self.settings)["hooks"]["SessionStart"][0], {"hooks": [self.unrelated]})
+        code, out, err = self.invoke()
+        self.assertEqual(code, 0, out + err)
+        code, out, err = self.invoke("--install-hooks")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(self.read(self.settings)["hooks"]["SessionStart"],
+                         [{"hooks": [self.unrelated]}, context.hooks("claude", sys.executable, self.root)])
+        self.invoke("--install-hooks", "--command", str(command))
+        command.chmod(0o644)  # a command that cannot run delivers no rules
+        code, out, err = self.invoke()
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(f"REPORT: stale session context hook: {self.settings}", out)
+        command.unlink()
+        code, out, err = self.invoke()
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(f"REPORT: stale session context hook: {self.settings}", out)
+
     def test_replaces_older_versions_and_hooks_a_receipt_lists_as_replaced(self):
         legacy = [{"type": "command", "command": f"{sys.executable} -I {shlex.quote(self.legacy)} session {n}"}
                   for n in (1, 2)]
@@ -1288,6 +1324,8 @@ class SessionContextTests(unittest.TestCase):
         self.write("rules/core.md", "# Core rules\n\n" + sections)
         self.write("rules/writing.md", "# Writing rules\n\n```markdown\n## Not a heading\n```\n\n" + sections)
         self.write("skills/operator-writing/SKILL.md", "# Operator writing\n\nWrite plainly.\n")
+        self.write("ruleset.json", json.dumps({"version": 1, "context": [
+            "rules/core.md", "rules/writing.md", "skills/operator-writing/SKILL.md"]}))
         self.write("custom/INDEX.md", "# Machine-local capability index\n\nLocal policy line.\n")
 
     def write(self, name, text):
@@ -1365,7 +1403,7 @@ class SessionContextTests(unittest.TestCase):
         _, packed, too_long = context.parts(self.root)
         self.assertEqual(too_long, [("rules/core.md", "Long section")])
         text = "".join(self.rendered())
-        self.assertRegex(text, r'HOUSE RULES HOOK ERROR: rules/core\.md section "Long section" is \d+ characters, '
+        self.assertRegex(text, r'HOUSE RULES HOOK ERROR: the section "Long section" is \d+ characters, '
                                r'more than the \d+ one part holds, so it is not in this context\.')
         self.assertNotIn("word word", text)
         self.assertIn("## Short\n\nKept.", text)
@@ -1511,7 +1549,7 @@ class SessionContextTests(unittest.TestCase):
         prompt = {"session_id": "session_a"}
         self.write("rules/core.md", "# Core rules\n\n## Long section\n\n" + "word " * 3000 + "\n")
         for _ in range(2):
-            self.assertIn('rules/core.md section "Long section" is', self.kimi("prompt", prompt))
+            self.assertIn('the section "Long section" is', self.kimi("prompt", prompt))
 
     def delivered_with_index_changing(self, first_read, later_reads):
         """Delivered text and failures while INDEX.md changes between filesystem checks."""
@@ -1755,11 +1793,21 @@ class ApprovedWorkListingTests(unittest.TestCase):
     def test_no_search_starts_after_the_shared_deadline(self):
         self.configure("example-org\nother-org\n")
         clock = iter([0.0, 1.0, context.GH_TIMEOUT + 1.0])
-        with self.fake_gh("[]"), mock.patch.object(context.time, "monotonic", lambda: next(clock)):
+        issues = [self.issue(7, "Found before the deadline")]
+        with self.fake_gh(json.dumps(issues)), mock.patch.object(context.time, "monotonic", lambda: next(clock)):
             listing = context.approved(self.base)
-        self.assertEqual(listing, f"{context.ERROR} approved-work listing used its {context.GH_TIMEOUT} s "
-                                  "before searching other-org.")
+        self.assertEqual(listing, "\n".join([
+            self.HEAD, self.row(7, "Found before the deadline"),
+            f"{context.ERROR} the approved-work search was cut short at the hook's deadline before searching other-org."]))
         self.assertEqual(len((self.bin / "calls").read_text().splitlines()), 1)
+
+    def test_the_search_stops_at_the_deadline_house_rules_exec_passes(self):
+        self.configure("example-org\n")
+        with self.fake_gh("[]"), mock.patch.dict(os.environ, {"HOUSE_RULES_DEADLINE": str(time.time() - 1)}):
+            listing = context.approved(self.base)
+        self.assertEqual(listing, "\n".join([self.HEAD, f"{context.ERROR} the approved-work search was cut short at "
+                                                          "the hook's deadline before searching example-org."]))
+        self.assertFalse((self.bin / "calls").exists())
 
     NOTICE = ("HOUSE RULES HOOK ERROR: this list may not show every open approved item. Close the issues of "
               "finished approved work, so the label marks only work that still waits.")
