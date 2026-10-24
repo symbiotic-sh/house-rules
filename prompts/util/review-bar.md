@@ -14,6 +14,8 @@ concrete scenario.
 - Code quality: the smallest change that works, in the surrounding style, one way to do
   each thing, names that say what things do and follow the declared naming conventions
   (writing rules, Language).
+- Evidence: a claim in PR text, reports or test evidence that something is absent names the
+  command that looked and its exit status (writing rules, Claim labels).
 - Waste, as a blocking class: tests that guard no real behavior or defect, duplicate or
   tautological checks, speculative abstractions, dead code, drive-by refactors, docs longer
   than the fact they carry.

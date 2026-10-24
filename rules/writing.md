@@ -211,6 +211,9 @@ After:
 - Put the evidence for a `FACT` inside its sentence.
   Link the claim's key words to the source.
   Or name the file and line, the command, or the quoted output in a few words.
+- A claim that something is absent, such as "none found", "no matches" or "nothing failed",
+  names the command that looked and its exit status, for example: `find ~ -name '*.ipsw'`
+  exited 0 with no output.
 - A claim you remember, infer or read in a summary is never a `FACT`.
   A claim you receive from another agent or an earlier session is never a `FACT`.
   Verify it first, or label it `ASSUMPTION` and name its source.

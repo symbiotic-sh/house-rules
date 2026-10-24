@@ -103,6 +103,10 @@
    Do not treat reported symptoms as proof of their cause.
 3. **Require runtime evidence.**
    Claim something works only after running it and observing logs, tests, or artifacts.
+   Treat a command's result as evidence only when the command ran to the end.
+   Read its exit status and error output before reporting what it found, above all that it found nothing.
+   Never discard the error output, or let a pipe hide the exit status, of a command whose result you report.
+   Treat empty output from a command that failed, timed out or was not found as no result: say the check did not run, and run it again.
    Never fabricate.
 4. **Communicate clearly.**
    rules/writing.md governs all text.
