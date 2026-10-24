@@ -76,6 +76,10 @@
       "kind": "design"
     },
     {
+      "path": "docs/design/218-layered-configuration.md",
+      "kind": "design"
+    },
+    {
       "path": "prompts/README.md",
       "kind": "other",
       "reason": "Agent instruction or prompt reference, not a specification or design document."
@@ -1097,6 +1101,183 @@
         "authority": "operator",
         "decision": "repository-checks#decision-approval"
       }
+    },
+    {
+      "id": "layered-configuration",
+      "title": "Layered House Rules configuration",
+      "status": "approved",
+      "approval": {
+        "authority": "operator",
+        "decision": "layered-configuration#decision-approval"
+      },
+      "purpose": "Layered House Rules configuration lets every repository say which House Rules version and which further rule and setting repositories it uses, and makes every tool resolve them from the repository it runs in.",
+      "audience": "House Rules maintainers, repository owners and teams adopting House Rules, familiar with Git branches and commits, JSON and the repository checks design.",
+      "scope": "The repository, layer and global configuration files, version resolution and its cache, the house-rules command, link mode, Git isolation for checks, and how every consumer resolves.",
+      "non_goals": "New language checks, a runner other than House Rules', a package registry, and implementation in this change.",
+      "navigation": {
+        "path": "docs/design/218-layered-configuration.md",
+        "region": "layered-configuration"
+      },
+      "sections": [
+        {
+          "id": "layered-configuration",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "layered-configuration",
+          "roles": [],
+          "summary": "Read what layered configuration does and which tools resolve it.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "evidence",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "evidence",
+          "roles": [
+            "evidence",
+            "constraints"
+          ],
+          "summary": "See how House Rules reaches tools today and the constraints the design meets.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "tour",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "tour",
+          "roles": [
+            "tour"
+          ],
+          "summary": "Follow a Rust repository with two custom layers from its file to a refused commit and a session.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "configuration",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "configuration",
+          "roles": [
+            "mechanism"
+          ],
+          "summary": "Declare layers, profiles and settings, and predict the effective value of every key.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "resolving",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "resolving",
+          "roles": [
+            "mechanism"
+          ],
+          "summary": "Know how a ref becomes a commit, where its files live, and what works offline or linked.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "consumers",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "consumers",
+          "roles": [
+            "mechanism",
+            "ownership",
+            "integration"
+          ],
+          "summary": "Find where each tool reads the configuration and how checks avoid personal Git settings.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "examples",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "examples",
+          "roles": [
+            "mechanism"
+          ],
+          "summary": "Apply the design to a default repository, no configuration, link mode, a Warden review and an offline run.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "requirements",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "requirements",
+          "roles": [
+            "requirements"
+          ],
+          "summary": "Find the obligations each mechanism must meet.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "decisions",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "decisions",
+          "roles": [
+            "decisions",
+            "alternatives"
+          ],
+          "summary": "Read the operator's decisions with their words, the lead's recommendations and the design choices.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "questions",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "questions",
+          "roles": [
+            "questions"
+          ],
+          "summary": "See which questions stay open after the approval.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "rollout",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "rollout",
+          "roles": [
+            "rollout"
+          ],
+          "summary": "Move a machine from one checkout to the command, and adopt the file in a repository.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "work",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "work",
+          "roles": [
+            "work-packages"
+          ],
+          "summary": "Plan the implementation pull requests and their order.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "reference",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "reference",
+          "roles": [
+            "reference"
+          ],
+          "summary": "Look up schemas, commands, variables, record formats, messages and naming conventions.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        },
+        {
+          "id": "acceptance",
+          "path": "docs/design/218-layered-configuration.md",
+          "anchor": "acceptance",
+          "roles": [
+            "acceptance",
+            "acceptance-evidence"
+          ],
+          "summary": "See the planned demonstrations for each requirement.",
+          "prerequisites": [],
+          "explanatory_dependencies": []
+        }
+      ],
+      "scenarios": []
     }
   ]
 }

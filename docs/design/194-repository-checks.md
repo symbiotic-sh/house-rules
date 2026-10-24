@@ -21,7 +21,7 @@ flowchart TD
     F --> G["Commit or push refused, or CI job red, on any failure"]
 ```
 
-The [check configuration](#check-configuration) holds the repository's choices and names its House Rules source layer: a URL and a branch or a commit.
+The [check configuration](#check-configuration) holds the repository's choices and names its House Rules [source layer](218-layered-configuration.md#source-layer): a URL and a branch or a commit.
 The [check runner](#check-runner) runs at the commit that layer resolves to, once per run, as [House Rules revision and offline use](#revision) explains; the default branch is `main`, so a House Rules merge onto `main` reaches a repository that keeps that ref at its next run.
 It reads the configuration, selects the checks for the current [check stage](#check-stage) and runs each [check definition](#check-definition).
 Its [check run report](#check-run-report) names each layer with its commit and each check's version. It also says which check failed, why, how to fix it and how to rerun it.
@@ -64,6 +64,9 @@ Use this map to choose the next explanation to read.
 
 Each technical term below links to its defining Markdown section.
 
+- [Global configuration](218-layered-configuration.md#global-configuration) (`layered-configuration.global-configuration`) — The global configuration is the per-user JSON file ~/.config/house-rules/house-rules.json that supplies default sources for repositories without a repository configuration and machine-only budgets.
+- [Repository configuration](218-layered-configuration.md#repository-configuration) (`layered-configuration.repository-configuration`) — A repository configuration is the versioned JSON file house-rules.json at a repository's root that lists its source layers, its profiles and its own settings.
+- [Source layer](218-layered-configuration.md#source-layer) (`layered-configuration.source-layer`) — A source layer is one entry of sources: a Git repository, named by name and url, at one ref.
 - [Check configuration](194-repository-checks.md#check-configuration) (`repository-checks.check-configuration`) — A check configuration is the versioned JSON file house-rules.json at the repository root that names the repository's House Rules source layer and declares its checks.
 - [Check definition](194-repository-checks.md#check-definition) (`repository-checks.check-definition`) — A check definition is one command, the stages it runs at, the files it reads and how its result is read.
 - [Check installation](194-repository-checks.md#check-installation) (`repository-checks.check-installation`) — Check installation is the repository-checks procedure that writes a repository's configuration, Git hooks and CI step, and prepares the local cache.
@@ -190,7 +193,7 @@ A repository chooses its checks in one file; House Rules supplies the defaults a
 <a id="check-configuration"></a>
 ### Check configuration
 
-A check configuration is the versioned JSON file `house-rules.json` at the repository root that names the repository's House Rules source layer and declares its checks.
+A check configuration is the versioned JSON file `house-rules.json` at the repository root that names the repository's House Rules [source layer](218-layered-configuration.md#source-layer) and declares its checks.
 It sits at the root so that it can also carry shared House Rules settings beyond checks, as the [configuration file decision](#decision-configuration-file) records.
 The runner reads this file from the run's snapshot: the staged index at pre-commit, the commit at pre-push and in CI.
 An unstaged edit to it therefore has no effect on the commit being checked.
@@ -213,7 +216,7 @@ The effective settings come from two layers, applied in the order listed; the se
 - **House Rules layer, first:** the built-in [check definitions](#check-definition) at the commit the House Rules source resolved to.
 - **Repository layer, second:** the file's `checks` and `budgets`.
 
-Budgets for one machine only belong in the global configuration, which arrives with the resolver work, as the [local file decision](#decision-no-local-file) records.
+Budgets for one machine only belong in the [global configuration](218-layered-configuration.md#global-configuration), which arrives with the resolver work, as the [local file decision](#decision-no-local-file) records.
 
 The report names the layer of every check and of every override, so a reader can tell where each setting came from.
 Only the runner at the resolved commit judges the entries. A runner at another commit reads only `version` and `sources`. It then starts the runner at the resolved commit, as [House Rules revision and offline use](#revision) describes.
@@ -352,7 +355,7 @@ Every check of a snapshot, built-in or repository, runs with an environment that
 - `GIT_ATTR_NOSYSTEM=1`: no system attributes file.
 - `GIT_NO_REPLACE_OBJECTS=1`: Git reads each commit itself, never a local replacement.
 - The inherited `GIT_CONFIG_PARAMETERS`, which `git -c` sets for a hook, `GIT_CONFIG_COUNT` and every `GIT_CONFIG_KEY_<n>` and `GIT_CONFIG_VALUE_<n>` are removed. So are the variables that bind Git to another Git directory or index, such as `GIT_DIR` and `GIT_INDEX_FILE`; Git finds the clone's own Git directory from the repository root, the check's working folder.
-- The runner then sets `GIT_CONFIG_COUNT=1`, `GIT_CONFIG_KEY_0=core.attributesFile` and `GIT_CONFIG_VALUE_0=/dev/null`. That keeps Git from reading a personal attributes file such as `~/.config/git/attributes`, which Git reads by default even without a global configuration.
+- The runner then sets `GIT_CONFIG_COUNT=1`, `GIT_CONFIG_KEY_0=core.attributesFile` and `GIT_CONFIG_VALUE_0=/dev/null`. That keeps Git from reading a personal attributes file such as `~/.config/git/attributes`, which Git reads by default even without a [global configuration](218-layered-configuration.md#global-configuration).
 
 The clone's own `.git/config` and `.git/info/attributes` still apply, because Git reads them from the clone's Git directory. A hook's result can therefore differ from CI's in a clone whose owner set them, for example `core.whitespace` in `.git/config` or `* -whitespace` in `.git/info/attributes`. CI's fresh clone has neither, so CI's result decides the PR. Those files are set on purpose by the clone's owner, like skipping a hook. The configuration carries no Git settings, as the [no Git settings decision](#decision-no-git-settings) records.
 A check that reads the working tree, one without [`{snapshot}`](#run-placeholders), runs in CI only, in the same environment, and sees the checkout's files and index.
@@ -849,7 +852,7 @@ A repository declares all its checks in one place.
 
 **Condition:** A repository has a [check configuration](#check-configuration).
 
-**Result:** The runner applies the built-in [check definitions](#check-definition) at the commit of the run's House Rules layer, changed by the repository's entries. It refuses unknown fields, among them `house_rules` and an entry's `enforced`, unknown built-in placeholders, and any changed default or repository check without a reason. It refuses an unsupported version, a source layer after House Rules, a URL with credentials, a ref that is neither a 40-digit commit nor a valid branch name, a 64-digit ref, and a URL in Git's `<transport>::` form. It refuses text that cannot be printed, without naming or repeating it.
+**Result:** The runner applies the built-in [check definitions](#check-definition) at the commit of the run's House Rules layer, changed by the repository's entries. It refuses unknown fields, among them `house_rules` and an entry's `enforced`, unknown built-in placeholders, and any changed default or repository check without a reason. It refuses an unsupported version, a [source layer](218-layered-configuration.md#source-layer) after House Rules, a URL with credentials, a ref that is neither a 40-digit commit nor a valid branch name, a 64-digit ref, and a URL in Git's `<transport>::` form. It refuses text that cannot be printed, without naming or repeating it.
 
 **Verification:** Fixture configurations through the runner.
 
@@ -868,7 +871,7 @@ Hook and CI resolve the same layers and run every check without personal, system
 
 **Condition:** A hook or a CI step runs repository checks.
 
-**Result:** Both run `checks.py run` at the commit the configuration's House Rules layer resolves to, with the same configuration. A runner at another commit prepares and runs the runner at the resolved commit. Two runs resolve different commits when the layer's branch moves between them; the [source layers decision](#decision-source-layers) accepts that, and each report names each layer's commit and each check's version, so a reader can tell which input differed. Every check reads Git under [Git isolation](#git-isolation): no personal, system or inherited Git configuration and no personal or system attributes file changes a check's result. The clone's own `.git/config` and `.git/info/attributes` still apply, so a hook's result can differ from CI's in a clone whose owner set them; CI's fresh clone decides.
+**Result:** Both run `checks.py run` at the commit the configuration's House Rules layer resolves to, with the same configuration. A runner at another commit prepares and runs the runner at the resolved commit. Two runs resolve different commits when the layer's branch moves between them; the [pinned layers decision](#decision-source-layers) accepts that, and each report names each layer's commit and each check's version, so a reader can tell which input differed. Every check reads Git under [Git isolation](#git-isolation): no personal, system or inherited Git configuration and no personal or system attributes file changes a check's result. The clone's own `.git/config` and `.git/info/attributes` still apply, so a hook's result can differ from CI's in a clone whose owner set them; CI's fresh clone decides.
 A repository check's other clone-local inputs, such as a tool on the machine or the check's environment apart from Git, can still differ between a clone and CI's fresh clone. Keeping them equal is the repository's responsibility.
 
 **Verification:** Fixture House Rules whose main moves between runs; personal, system and inherited Git configuration and a personal attributes file; a clone with its own `user.name`.
@@ -973,7 +976,7 @@ Every run uses the House Rules layer its configuration names, at the latest comm
 
 **Status:** specified.
 
-**Basis:** [Source layers decision](#decision-source-layers).
+**Basis:** [Pinned layers decision](#decision-source-layers).
 
 <a id="req-checks-warning-first"></a>
 ### Requirement: new default checks warn first
@@ -992,7 +995,7 @@ A new default check reports its findings without refusing commits until a later 
 
 **Status:** specified.
 
-**Basis:** [Source layers decision](#decision-source-layers).
+**Basis:** [Pinned layers decision](#decision-source-layers).
 
 <a id="decisions"></a>
 ## Decisions and alternatives
@@ -1014,23 +1017,23 @@ The operator's direction, quoted: "We should provide sane defaults but it should
 <a id="decision-configuration-file"></a>
 ### Decision: one JSON file at the repository root
 
-**Choice:** Declare the repository's House Rules settings, its source layers and its checks first, in `house-rules.json` at the repository root, versioned JSON. Amended on 2026-10-24 by the [local file decision](#decision-no-local-file): there is no local file.
+**Choice:** Declare the repository's House Rules settings, its [source layers](218-layered-configuration.md#source-layer) and its checks first, in `house-rules.json` at the repository root, versioned JSON. Amended on 2026-10-24 by the [local file decision](#decision-no-local-file): there is no local file.
 
 **Authority:** Lead decision, 2026-10-22, which the operator left to the lead ("you tell me"); the operator's example name was `.house-rules.toml`. That decision named `.agents/checks.json`, beside the bible. The lead renamed the file to `house-rules.json` at the root on 2026-10-24, so that the configuration can also carry shared settings beyond checks.
 
-**Reason:** The runner must read it on Python 3.9, and Python has no TOML reader before 3.11. House Rules already keeps tool configuration in JSON (`.rule-changes.json`, `docs/DOCUMENTS.json`). The file now names its House Rules source layers, which the [source layers decision](#decision-source-layers) lets later carry shared settings as well as checks, so a name for checks alone in the rules folder no longer fits. A file at the root named after House Rules is where a reader looks for a repository's House Rules settings, as for a toolchain file.
+**Reason:** The runner must read it on Python 3.9, and Python has no TOML reader before 3.11. House Rules already keeps tool configuration in JSON (`.rule-changes.json`, `docs/DOCUMENTS.json`). The file now names its House Rules source layers, which the [pinned layers decision](#decision-source-layers) lets later carry shared settings as well as checks, so a name for checks alone in the rules folder no longer fits. A file at the root named after House Rules is where a reader looks for a repository's House Rules settings, as for a toolchain file.
 
 **Rejected alternatives:** `.house-rules.toml` needs Python 3.11 or a third-party reader in every hook. YAML needs a third-party reader. Settings inside the bible's Markdown would need a parser for a second format in a prose file. `.agents/checks.json`, the first choice, names only checks; the 2026-10-22 objection that a file named after House Rules describes its owner no longer holds, because the file now holds the repository's House Rules settings and not only its checks.
 
 <a id="decision-latest-house-rules"></a>
 ### Decision: always run at the latest House Rules main
 
-**Status:** superseded on 2026-10-24 by the [source layers decision](#decision-source-layers). Its logging and warning-first parts stay in force through that decision; the record below is kept as history.
+**Status:** superseded on 2026-10-24 by the [pinned layers decision](#decision-source-layers). Its logging and warning-first parts stay in force through that decision; the record below is kept as history.
 
 **Choice:**
 
 - Repository checks always run against the latest House Rules main. `.agents/checks.json` has no revision field, and a run resolves main once, so pushed commits cannot disagree on a revision.
-- An older revision runs only through the [revision override](#revision-override), a deliberate test for one run. No repository configuration stores it, and the report records that the run used it.
+- An older revision runs only through the [revision override](#revision-override), a deliberate test for one run. No [repository configuration](218-layered-configuration.md#repository-configuration) stores it, and the report records that the run used it.
 - Every run logs the House Rules revision, each check's version as the runner read it before the start, and any prompt versions it used. They appear in its output and so in the CI log, as [What each run logs](#logged-versions) defines.
 - A newly added default check reports as a warning first. It starts failing commits only after a later House Rules change, merged and announced, enforces it, as [New built-in checks warn first](#warning-first) describes.
 
@@ -1132,7 +1135,7 @@ The operator's direction, quoted: "We should provide sane defaults but it should
 <a id="decision-no-local-file"></a>
 ### Decision: no local configuration file
 
-**Choice:** The runner reads no `house-rules.local.json`. Budgets for one machine only belong in the global configuration, which arrives with the resolver work, not in [#212](https://github.com/symbiotic-build/house-rules/pull/212). The file name `house-rules.json` stays.
+**Choice:** The runner reads no `house-rules.local.json`. Budgets for one machine only belong in the [global configuration](218-layered-configuration.md#global-configuration), which arrives with the resolver work, not in [#212](https://github.com/symbiotic-build/house-rules/pull/212). The file name `house-rules.json` stays.
 
 **Authority:** Lead decision, 2026-10-24, in the review of [#212](https://github.com/symbiotic-build/house-rules/pull/212) for mechanisms no requirement needs.
 
@@ -1240,7 +1243,7 @@ Each PR follows the normal review and closes nothing until the last one closes [
 - **Runner and built-ins:** `skills/repository-checks/scripts/checks.py` with `run`, `prepare` and `status`, the whitespace and spec-docs definitions, and its tests. Depends on [#196](https://github.com/symbiotic-build/house-rules/issues/196) for the spec-docs time target. Gate: the acceptance cases below as unit tests. The lead split it after the first runner PR, [#206](https://github.com/symbiotic-build/house-rules/pull/206), reached the review procedure's limit of three fix rounds. It lands as two work packages, one PR each:
   - **Runner core:** every part of the runner except the build queue and the check versions. It starts each check directly.
   - **Build queue and check versions**, the queue and versions work package: checks started through the [build queue](#build-queue), and the [check versions](#logged-versions). Depends on the runner core.
-- **Custom source layers:** further `sources` entries and their cascade, in [#217](https://github.com/symbiotic-build/house-rules/issues/217), a separate PR; this runner refuses them until then.
+- **Custom [source layers](218-layered-configuration.md#source-layer):** further `sources` entries and their cascade, in [#217](https://github.com/symbiotic-build/house-rules/issues/217), a separate PR; this runner refuses them until then.
 - **Install procedure:** `install`, `skills/repository-checks/SKILL.md` and its `INDEX.md` entry. Depends on the runner. Gate: the install fixture cases.
 - **Agent status line:** the extra session-start handler in `scripts/session_context.py` and `scripts/sync.py --install-hooks`. Depends on the runner's `status`. Gate: `scripts/test_sync.py`.
 - **Rule line and House Rules adoption:** the [rule line](#rule-line), House Rules' own `house-rules.json`, and its CI step, which replaces the corpus check in `.github/workflows/spec-docs.yml`; that workflow keeps its tests and selector audit. Depends on the install. Gate: CI on that PR.

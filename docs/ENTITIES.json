@@ -334,7 +334,8 @@
         "anchor": "check-configuration"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "check configuration"
@@ -349,7 +350,8 @@
         "anchor": "check-definition"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "check definition"
@@ -364,7 +366,8 @@
         "anchor": "check-stage"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "check stage"
@@ -379,7 +382,8 @@
         "anchor": "check-runner"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "check runner"
@@ -394,7 +398,8 @@
         "anchor": "check-run-report"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "check run report"
@@ -409,7 +414,8 @@
         "anchor": "check-installation"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "check installation"
@@ -424,10 +430,261 @@
         "anchor": "hook-block"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "hook block"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.repository-configuration": {
+      "kind": "data",
+      "home": {
+        "section": "layered-configuration#configuration",
+        "anchor": "repository-configuration"
+      },
+      "scope": [
+        "layered-configuration",
+        "repository-checks"
+      ],
+      "forms": [
+        "repository configuration",
+        "repository configurations"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.source-layer": {
+      "kind": "concept",
+      "home": {
+        "section": "layered-configuration#configuration",
+        "anchor": "source-layer"
+      },
+      "scope": [
+        "layered-configuration",
+        "repository-checks"
+      ],
+      "forms": [
+        "source layer",
+        "source layers"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.ruleset": {
+      "kind": "data",
+      "home": {
+        "section": "layered-configuration#configuration",
+        "anchor": "ruleset"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "ruleset",
+        "rulesets"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.profile": {
+      "kind": "concept",
+      "home": {
+        "section": "layered-configuration#configuration",
+        "anchor": "profile"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "repository profile",
+        "repository profiles"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.global-configuration": {
+      "kind": "data",
+      "home": {
+        "section": "layered-configuration#configuration",
+        "anchor": "global-configuration"
+      },
+      "scope": [
+        "layered-configuration",
+        "repository-checks"
+      ],
+      "forms": [
+        "global configuration"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.effective-configuration": {
+      "kind": "data",
+      "home": {
+        "section": "layered-configuration#configuration",
+        "anchor": "effective-configuration"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "effective configuration"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.version-resolution": {
+      "kind": "mechanism",
+      "home": {
+        "section": "layered-configuration#resolving",
+        "anchor": "version-resolution"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "version resolution"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.version-cache": {
+      "kind": "data",
+      "home": {
+        "section": "layered-configuration#resolving",
+        "anchor": "version-cache"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "version cache"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.offline-use": {
+      "kind": "mechanism",
+      "home": {
+        "section": "layered-configuration#resolving",
+        "anchor": "offline-use"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "offline resolution"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.link-mode": {
+      "kind": "mechanism",
+      "home": {
+        "section": "layered-configuration#resolving",
+        "anchor": "link-mode"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "link mode"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.resolution-record": {
+      "kind": "data",
+      "home": {
+        "section": "layered-configuration#resolving",
+        "anchor": "resolution-record"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "resolution record",
+        "resolution records"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.house-rules-command": {
+      "kind": "component",
+      "home": {
+        "section": "layered-configuration#resolving",
+        "anchor": "house-rules-command"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "House Rules command"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.configuration-origin": {
+      "kind": "concept",
+      "home": {
+        "section": "layered-configuration#consumers",
+        "anchor": "configuration-origin"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "configuration origin",
+        "configuration origins"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.isolated-git-environment": {
+      "kind": "mechanism",
+      "home": {
+        "section": "layered-configuration#consumers",
+        "anchor": "git-isolation"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "isolated Git environment"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.command-environment-variable": {
+      "kind": "setting",
+      "home": {
+        "section": "layered-configuration#reference",
+        "anchor": "environment-variables"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "command environment variable",
+        "command environment variables"
+      ],
+      "symbols": [],
+      "rejected_forms": []
+    },
+    "layered-configuration.layer-placeholder": {
+      "kind": "interface",
+      "home": {
+        "section": "layered-configuration#reference",
+        "anchor": "run-placeholder-layer"
+      },
+      "scope": [
+        "layered-configuration"
+      ],
+      "forms": [
+        "run placeholder for layers"
       ],
       "symbols": [],
       "rejected_forms": []
@@ -439,7 +696,8 @@
         "anchor": "run-placeholders"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "run placeholder",
@@ -461,7 +719,8 @@
         "anchor": "runner-options"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "runner option",
@@ -485,7 +744,8 @@
         "anchor": "runner-environment-variables"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "runner environment variable",
@@ -509,7 +769,8 @@
         "anchor": "clone-settings"
       },
       "scope": [
-        "repository-checks"
+        "repository-checks",
+        "layered-configuration"
       ],
       "forms": [
         "clone setting",
