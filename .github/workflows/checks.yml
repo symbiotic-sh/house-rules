@@ -28,6 +28,8 @@ jobs:
         run: node --check skills/audit-report-authoring/scripts/lint-report-set.mjs
       - name: Test installation sync
         run: .tmp/spec-docs-env/bin/python skills/spec-writing/scripts/junit_unittest.py --jobs 4 --report .tmp/test-reports/sync.xml discover -s scripts -p test_sync.py
+      - name: Test the House Rules command
+        run: .tmp/spec-docs-env/bin/python -B skills/spec-writing/scripts/junit_unittest.py --jobs 4 --report .tmp/test-reports/house-rules.xml discover -s scripts -p test_house_rules.py
       - name: Test transcript extraction
         run: .tmp/spec-docs-env/bin/python -B skills/spec-writing/scripts/junit_unittest.py --jobs 4 --report .tmp/test-reports/operator-protocol.xml discover -s skills/operator-protocol/scripts
       - name: Test pull-request watcher

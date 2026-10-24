@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "context": [
+    "rules/core.md",
+    "rules/outcome.md",
+    "rules/delivery.md",
+    "rules/writing.md",
+    "rules/git.md",
+    "rules/priority-labels.md",
+    "rules/session-writing.md",
+    "skills/operator-writing/SKILL.md"
+  ],
+  "checks": {
+    "whitespace": {
+      "enabled": true,
+      "enforced": true,
+      "scope": "diff",
+      "stages": ["pre-commit", "ci"],
+      "paths": ["**"],
+      "requires": [],
+      "run": ["git", "--attr-source={snapshot}", "diff", "--check", "{base}", "{snapshot}"],
+      "fix": "remove the whitespace errors the output lists, stage the result"
+    },
+    "spec-docs": {
+      "enabled": true,
+      "enforced": true,
+      "scope": "tree",
+      "stages": ["pre-commit", "ci"],
+      "paths": ["**"],
+      "requires": ["docs/DOCUMENTS.json"],
+      "run": ["{python}", "-I", "{house_rules}/skills/spec-writing/scripts/spec_docs.py", "check", "--root", ".",
+              "--rev", "{snapshot}"],
+      "fix": "apply the remedy for each code in the spec checker's diagnostic table, run spec_docs.py generate, stage the result"
+    }
+  },
+  "profiles": {
+    "rust": {},
+    "typescript": {},
+    "python": {},
+    "svelte": {},
+    "specs": {}
+  }
+}
